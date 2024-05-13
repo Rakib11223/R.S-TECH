@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image Conversion App - by RAKIB</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #0c1b2f; /* Dark blue background */
+            color: #fff; /* White text */
+            margin: 0;
+            padding: 0;
+        }
+
+        #drop-zone {
+            border: 2px dashed #66cdaa; /* Darker green border */
+            padding: 20px;
+            text-align: center;
+            margin-bottom: 20px;
+            background-color: #063951; /* Dark blue background */
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            transition: border-color 0.3s ease;
+            animation: pulse-border 2s infinite alternate;
+        }
+
+        @keyframes pulse-border {
+            0% { border-color: #66cdaa; }
+            100% { border-color: #0c1b2f; }
+        }
+
+        img {
+            max-width: 100%;
+            max-height: 400px;
+            display: block;
+            margin: auto;
+            margin-top: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            transition: box-shadow 0.3s ease;
+        }
+
+        .input-group {
+            margin-bottom: 10px;
+            text-align: center;
+        }
+
+        .input-group label {
+            margin-right: 5px;
+        }
+
+        input[type="number"], select {
+            width: 80px;
+            padding: 5px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+            box-sizing: border-box;
+        }
+
+        .button-group {
+            margin-top: 10px;
+            text-align: center;
+        }
+
+        button {
+            padding: 10px 20px;
+            border: none;
+            background-color: #66cdaa; /* Green button background */
+            color: #fff; /* White text */
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        button:hover {
+            background-color: #4cae82; /* Darker green button background */
+        }
+
+        .download-btn {
+            background-color: #ff6f61; /* Red button background */
+            margin-left: 10px;
+        }
+
+        .download-btn:hover {
+            background-color: #ff4f2e; /* Darker red button background */
+        }
+
+        .size-info {
+            text-align: center;
+            margin-top: 10px;
+        }
+
+        .creator-name {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: rgba(255, 255, 255, 0.5); /* Transparent white */
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div id="drop-zone">
+        <p>Drag & drop image here</p>
+        <input type="file" id="file-input" accept="image/*">
+    </div>
+
+    <div class="input-group">
+        <label for="width">Width:</label>
+        <input type="number" id="width" value="300">
+        <label for="height">Height:</label>
+        <input type="number" id="height" value="200">
+        <label for="format">Format:</label>
+        <select id="format">
+            <option value="jpeg">JPEG</option>
+            <option value="png">PNG</option>
+            <option value="webp">WebP</option>
+            <!-- Add more options for other formats if needed -->
+        </select>
+    </div>
+
+    <div class="button-group">
+        <button onclick="resizeImage()">Convert</button>
+        <button class="download-btn" onclick="downloadImage()">Download Converted Image</button>
+    </div>
+
+    <img id="image-preview">
+
+    <div class="size-info" id="size-info"></div>
+    <div class="creator-name">Created by RAKIB</div>
+
+    <script>
+        const dropZone = document.getElementById('drop-zone');
+        const fileInput = document.getElementById('file-input');
+        const imagePreview = document.getElementById('image-preview');
+        const widthInput = document.getElementById('width');
+        const heightInput = document.getElementById('height');
+        const formatSelect = document.getElementById('format');
+        const sizeInfo = document.getElementById('size-info');
+
+        dropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropZone.style.borderColor = '#66cdaa';
+        });
+
+        dropZone.addEventListener('dragleave', () => {
+            dropZone.style.borderColor = '#ccc';
+        });
+
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropZone.style.borderColor = '#ccc';
+            const file = e.dataTransfer.files[0];
+            if (file.type.startsWith('image/')) {
+                const reader = new FileReader();
+                reader.onload = () => {
+                    imagePreview.src = reader.result;
+                    updateImageSize(file.size);
+                };
+                reader.readAsDataURL(file);
+            } else {
+                alert('Please drop an image file.');
+            }
+        });
+
+        fileInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            const reader = new FileReader();
+            reader.onload = () => {
+                imagePreview.src = reader.result;
+                updateImageSize(file.size);
+            };
+            reader.readAsDataURL(file);
+        });
+
+        function resizeImage() {
+            const width = parseInt(widthInput.value);
+            const height = parseInt(heightInput.value);
+            const format = formatSelect.value;
+            const canvas = document.createElement('canvas');
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(imagePreview, 0, 0, width, height);
+            const convertedImage = canvas.toDataURL(`image/${format}`);
+            imagePreview.src = convertedImage;
+            updateImageSize(getBase64Size(convertedImage));
+        }
+
+        function downloadImage() {
+            const link = document.createElement('a');
+            link.download = `converted_image.${formatSelect.value}`;
+            link.href = imagePreview.src;
+            link.click();
+        }
+
+        function updateImageSize(sizeInBytes) {
+            const sizeInKB = (sizeInBytes / 1024).toFixed(2);
+            const sizeInMB = (sizeInKB / 1024).toFixed(2);
+            sizeInfo.textContent = `Size: ${sizeInKB} KB (${sizeInMB} MB)`;
+        }
+
+        function getBase64Size(base64String) {
+            const padding = (base64String.endsWith('=') ? base64String.match(/=/g).length : 0);
+            return (base64String.length * 0.75) - padding;
+        }
+    </script>
+</body>
+</html>

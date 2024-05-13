@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image Background Color Changer - by RAKIB</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #0c1b2f; /* Dark blue background */
+            color: #fff; /* White text */
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            text-align: center;
+            margin-top: 50px;
+        }
+
+        .custom-button {
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            margin: 5px;
+            background-color: #66cdaa; /* Green button background */
+            border: none;
+            color: #fff; /* White text */
+            border-radius: 8px;
+            transition: background-color 0.3s;
+        }
+
+        .custom-button:hover {
+            background-color: #4cae82; /* Darker green button background */
+        }
+
+        .custom-button:active {
+            background-color: #3e8e41; /* Active green button background */
+        }
+
+        input[type="file"] {
+            display: none;
+        }
+
+        .color-palette {
+            margin-top: 10px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .color-box {
+            width: 30px;
+            height: 30px;
+            margin: 0 5px;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: transform 0.2s ease-in-out;
+        }
+
+        .color-box:hover {
+            transform: scale(1.1);
+        }
+
+        .rgb-sliders {
+            margin-top: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .rgb-slider {
+            width: 80px; /* Adjusted width */
+            margin: 0 3px; /* Adjusted margin */
+        }
+
+        .creator-name {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: rgba(255, 255, 255, 0.5); /* Transparent white */
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <img id="image" src="image.jpg" alt="Image">
+        <input type="file" id="fileInput" accept="image/*" onchange="previewImage(event)">
+        <label for="fileInput" class="custom-button">Import Photo</label>
+        <div class="color-palette">
+            <div class="color-box" style="background-color: red;" onclick="setColor('red')"></div>
+            <div class="color-box" style="background-color: green;" onclick="setColor('green')"></div>
+            <div class="color-box" style="background-color: blue;" onclick="setColor('blue')"></div>
+            <div class="color-box" style="background-color: yellow;" onclick="setColor('yellow')"></div>
+            <div class="color-box" style="background-color: orange;" onclick="setColor('orange')"></div>
+            <div class="color-box" style="background-color: purple;" onclick="setColor('purple')"></div>
+            <div class="color-box" style="background-color: white;" onclick="setColor('white')"></div>
+        </div>
+        <div class="rgb-sliders">
+            <label for="redSlider">Red:</label>
+            <input type="range" id="redSlider" class="rgb-slider" min="0" max="255" value="0" onchange="updateColor()">
+            <label for="greenSlider">Green:</label>
+            <input type="range" id="greenSlider" class="rgb-slider" min="0" max="255" value="0" onchange="updateColor()">
+            <label for="blueSlider">Blue:</label>
+            <input type="range" id="blueSlider" class="rgb-slider" min="0" max="255" value="0" onchange="updateColor()">
+        </div>
+        <button class="custom-button" onclick="changeColor()">Change Color</button>
+        <button class="custom-button" onclick="resetImage()">Reset</button>
+        <button class="custom-button" onclick="saveImage('png')">Save as PNG</button>
+        <button class="custom-button" onclick="saveImage('jpeg')">Save as JPEG</button>
+    </div>
+    <div class="creator-name">Created by RAKIB</div>
+
+    <script>
+        var originalImageSrc = '';
+        var redValue = 0;
+        var greenValue = 0;
+        var blueValue = 0;
+
+        function previewImage(event) {
+            var input = event.target;
+            var reader = new FileReader();
+            reader.onload = function(){
+                var image = document.getElementById('image');
+                image.src = reader.result;
+                originalImageSrc = reader.result;
+            };
+            reader.readAsDataURL(input.files[0]);
+        }
+
+        function changeColor() {
+            var image = document.getElementById('image');
+            var color = `rgb(${redValue}, ${greenValue}, ${blueValue})`;
+            image.style.backgroundColor = color;
+        }
+
+        function resetImage() {
+            var image = document.getElementById('image');
+            image.src = originalImageSrc;
+            image.style.backgroundColor = 'transparent';
+        }
+
+        function saveImage(format) {
+            var image = document.getElementById('image');
+            var canvas = document.createElement('canvas');
+            canvas.width = image.width;
+            canvas.height = image.height;
+            var ctx = canvas.getContext('2d');
+            ctx.drawImage(image, 0, 0);
+            var color = `rgb(${redValue}, ${greenValue}, ${blueValue})`;
+            ctx.globalCompositeOperation = 'destination-over';
+            ctx.fillStyle = color;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            var link = document.createElement('a');
+            var imageName = 'modified_image';
+            if (format === 'png') {
+                link.download = imageName + '.png';
+                link.href = canvas.toDataURL('image/png');
+            } else if (format === 'jpeg') {
+                link.download = imageName + '.jpeg';
+                link.href = canvas.toDataURL('image/jpeg', 0.9); // 0.9 is the image quality (0.0 - 1.0)
+            }
+            link.click();
+        }
+
+        function setColor(color) {
+            var rgb = hexToRgb(color);
+            redValue = rgb.r;
+            greenValue = rgb.g;
+            blueValue = rgb.b;
+            updateSliders();
+            changeColor();
+        }
+
+        function updateColor() {
+            redValue = document.getElementById('redSlider').value;
+            greenValue = document.getElementById('greenSlider').value;
+            blueValue = document.getElementById('blueSlider').value;
+            changeColor();
+        }
+
+        function updateSliders() {
+            document.getElementById('redSlider').value = redValue;
+            document.getElementById('greenSlider').value = greenValue;
+            document.getElementById('blueSlider').value = blueValue;
+        }
+
+        function hexToRgb(hex) {
+            var bigint = parseInt(hex.substring(1), 16);
+            var r = (bigint >> 16) & 255;
+            var g = (bigint >> 8) & 255;
+            var b = bigint & 255;
+            return { r, g, b };
+        }
+    </script>
+</body>
+</html>
